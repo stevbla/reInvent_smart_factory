@@ -1,0 +1,597 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: |
+  This stack creates the resources required for MFG303 re:Invent 2018 Workshop
+  Author: Steve Blackwell <stevbla@amazon.com>
+Parameters:
+  C9User:
+    Description: Username for the Cloud9 IDE
+    Type: String
+    MinLength: 3
+    MaxLength: 10
+    AllowedPattern: ^[a-zA-Z0-9]*$
+  C9Passwd:
+    NoEcho: true
+    Description: Password for the Cloud9 username (Upper Case, Lower Case and Numeric, min 6, max 41 chars)
+    Type: String
+    MinLength: 6
+    MaxLength: 41
+    AllowedPattern: ^[a-zA-Z0-9]*$
+  InstanceType:
+    Description: EC2 Instance Type
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+    ConstraintDescription: Must be a valid EC2 instance type
+  EC2KeyPairName:
+    Type: AWS::EC2::KeyPair::KeyName
+
+Mappings:
+  AWSRegion2AMI:
+    us-east-1:
+      AMI: ami-8c1be5f6
+    us-west-2:
+      AMI: ami-e689729e
+    eu-central-1:
+      AMI: ami-c7ee5ca8
+    eu-west-1:
+      AMI: ami-acd005d5
+    eu-west-2:
+      AMI: ami-1a7f6d7e
+    ap-southeast-2:
+      AMI: ami-8536d6e7
+    ap-northeast-1:
+      AMI: ami-2a69be4c
+    ap-south-1:
+      AMI: ami-4fc58420
+
+  AWSRegion2WAMI:
+    us-east-1:
+      Windows2016base: ami-2d360152
+    us-west-2:
+      Windows2016base: ami-6d336015
+    us-west-1:
+      Windows2016base: ami-d12ecdb2
+    eu-west-1:
+      Windows2016base: ami-96e1f27c
+    eu-west-2:
+      Windows2016base: ami-6d336015
+    eu-west-3:
+      Windows2016base: ami-23b6065e
+    eu-central-1:
+      Windows2016base: ami-6af7f381
+    ap-northeast-1:
+      Windows2016base: ami-49096ba4
+    ap-northeast-2:
+      Windows2016base: ami-07219569
+    ap-northeast-3:
+      Windows2016base: ami-88424bf5
+    ap-southeast-1:
+      Windows2016base: ami-84e79e6e
+    ap-southeast-2:
+      Windows2016base: ami-d48623b6
+    ap-south-1:
+      Windows2016base: ami-ae1627c1
+    us-east-2:
+      Windows2016base: ami-36241f53
+    ca-central-1:
+      Windows2016base: ami-303ebc54
+    sa-east-1:
+      Windows2016base: ami-36caed5a
+
+
+Resources:
+  GGOtaS3UrlSignerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service: iot.amazonaws.com
+      Path: /
+      Policies:
+        -
+          #PolicyName: !Join ["-", ["GGOtaS3UrlSignerPolicy", !Ref 'AWS::Region']]
+          PolicyName: GGOtaS3UrlSignerPolicy-us-east-1
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Action: s3:GetObject
+                Effect: Allow
+                Resource:
+                  - "arn:aws:s3:::eu-central-1-greengrass-updates/*"
+                  - "arn:aws:s3:::eu-west-1-greengrass-updates/*"
+                  - "arn:aws:s3:::us-east-1-greengrass-updates/*"
+                  - "arn:aws:s3:::ap-northeast-1-greengrass-updates/*"
+                  - "arn:aws:s3:::us-west-2-greengrass-updates/*"
+                  - "arn:aws:s3:::ap-southeast-2-greengrass-updates/*"
+
+  GatewayToInternet:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        -
+          Key: CFN Stack
+          Value: !Ref AWS::StackName
+        -
+          Key: Name
+          Value: Inet GW
+
+  IoTWSEC2Instance:
+    Type: AWS::EC2::Instance
+    CreationPolicy:
+      ResourceSignal:
+        Count: 1
+        Timeout: PT20M
+    Properties:
+      IamInstanceProfile: !Ref IoTWSInstanceProfile
+      ImageId:
+        Fn::FindInMap:
+        - AWSRegion2AMI
+        - !Ref AWS::Region
+        - AMI
+      InstanceType: !Ref InstanceType
+      SecurityGroupIds:
+        - !Ref IoTWSSecurityGroup
+      SubnetId: !Ref PubSubnet
+      #KeyName: !Ref EC2KeyPairName
+      Tags:
+        -
+          Key: Name
+          Value: GG Instance
+      UserData:
+        Fn::Base64: !Sub |
+            #!/bin/bash -v
+            date
+            echo LANG=en_US.utf-8 >> /etc/environment
+            echo LC_ALL=en_US.UTF-8 >> /etc/environment
+            if ! uname -r |grep amzn ; then
+              exit 1
+            fi
+            echo '=== INSTALL SOFTWARE ==='
+            yum -y remove aws-cli
+            yum -y install sqlite telnet jq strace git tree gcc glibc-static python27-pip nginx
+            PATH=$PATH:/usr/local/bin
+            pip install boto3
+            pip install awscli
+            pip install AWSIoTPythonSDK
+            pip install AWSIoTDeviceDefenderAgentSDK
+            pip install urllib3
+            pip install geopy
+            pip install pyOpenSSL
+            echo '=== PREPARE FOR GREENGRASS ==='
+            cd /tmp
+            wget https://github.com/stevbla/reInvent_smart_factory/raw/master/src/ggc-user-data150.tar
+            wget https://github.com/stevbla/reInvent_smart_factory/raw/master/src/ggc-user-data160.tar
+            tar xf ggc-user-data150.tar
+            tar zxf /tmp/greengrass-linux-x86-64-1.5.0.tar.gz -C /
+            mv /greengrass /greengrass-1.5.0
+            tar xf ggc-user-data160.tar
+            tar zxf /tmp/greengrass-linux-x86-64-1.6.0.tar.gz -C /
+            useradd -r ggc_user
+            groupadd -r ggc_group
+            echo 'fs.protected_hardlinks = 1' >> /etc/sysctl.d/00-defaults.conf
+            echo 'fs.protected_symlinks = 1' >> /etc/sysctl.d/00-defaults.conf
+            sysctl -p
+            sysctl -p /etc/sysctl.d/00-defaults.conf
+            echo '# AWS Greengrass' >> /etc/fstab
+            echo 'cgroup /sys/fs/cgroup cgroup defaults 0 0' >> /etc/fstab
+            mount -a
+            for i in 1 2; do
+              mkdir -p /home/ec2-user/ggad-$i
+              cp /tmp/GGBootcampPubSub.py /home/ec2-user/ggad-$i
+              cp /tmp/gg_discovery_api.py /home/ec2-user/ggad-$i
+            done
+            cd /usr/local/lib/python2.7/site-packages/
+            unzip /tmp/python_sdk_1_2_0.zip
+            cd /tmp
+            echo '=== PREPARE Greengrass ML WORKSHOP ==='
+            mkdir -p /home/ec2-user/greengrass-ml
+            echo '=== PREPARE IoT DM WORKSHOP ==='
+            wget -O /tmp/dm-ws.tar https://github.com/stevbla/reInvent_smart_factory/raw/master/src/dm-ws.tar
+            tar xf /tmp/dm-ws.tar -C /home/ec2-user/
+            # wget -O /tmp/node-v8.11.3-linux-x64-custom.tgz https://github.com/stevbla/reInvent_smart_factory/raw/master/src/node-v8.11.3-linux-x64-custom.tgz
+            # tar xf /tmp/node-v8.11.3-linux-x64-custom.tgz -C /usr/local/
+            wget -O /tmp/node-v6.10.3-linux-x64-custom.tgz https://github.com/stevbla/reInvent_smart_factory/raw/master/src/node-v6.10.3-linux-x64-custom.tgz
+            tar xf /tmp/node-v6.10.3-linux-x64-custom.tgz -C /usr/local/
+            wget -O /tmp/libmosquitto1-1.4.15-2.1.x86_64.rpm https://github.com/stevbla/reInvent_smart_factory/raw/master/src/libmosquitto1-1.4.15-2.1.x86_64.rpm
+            rpm -i /tmp/libmosquitto1-1.4.15-2.1.x86_64.rpm
+            wget -O /tmp/mosquitto-clients-1.4.15-2.1.x86_64.rpm https://github.com/stevbla/reInvent_smart_factory/raw/master/src/mosquitto-clients-1.4.15-2.1.x86_64.rpm
+            rpm -i /tmp/mosquitto-clients-1.4.15-2.1.x86_64.rpm
+            cp /home/ec2-user/root.ca.bundle.pem /greengrass/certs/root.ca.pem
+            echo '=== SETUP FOR LAMBDA ==='
+            mkdir /nodered
+            # mkdir /userdir
+            mkdir /flows
+            chown ggc_user:ggc_group /nodered /flows
+            cp /usr/local/bin/node /usr/local/bin/nodejs6.10
+            mkdir /home/ec2-user/nodeRedLambda
+            wget -O /home/ec2-user/nodeRedLambda/nodeRedLambda.tar  https://github.com/stevbla/reInvent_smart_factory/raw/master/src/nodeRedLambda.tar
+            echo '=== PREPARE DEVICE DEFENDER ==='
+            test -e /home/ec2-user/device-defender && cd /home/ec2-user/device-defender &&
+            git clone https://github.com/aws-samples/aws-iot-device-defender-agent-sdk-python.git
+            cd /tmp
+            echo '=== CONFIGURE awscli and setting ENVIRONMENT VARS ==='
+            S3_BUCKET=${IoTWSS3Bucket}
+            echo "export S3_BUCKET=$S3_BUCKET" >> /home/ec2-user/.bashrc
+            echo "complete -C '/usr/local/bin/aws_completer' aws" >> /home/ec2-user/.bashrc
+            REGION=${AWS::Region}
+            mkdir /home/ec2-user/CA
+            mkdir /home/ec2-user/.aws
+            echo '[default]' > /home/ec2-user/.aws/config
+            echo 'output = json' >> /home/ec2-user/.aws/config
+            echo "region = $REGION" >> /home/ec2-user/.aws/config
+            chmod 400 /home/ec2-user/.aws/config
+            ARN_LAMBDA_ROLE=${IoTWSRegLambdaJITRRole.Arn}
+            ARN_IOT_PROVISIONING_ROLE=${IoTWSIoTServiceRole.Arn}
+            IOT_ENDPOINT=$(aws iot describe-endpoint --region $REGION | jq -r '.endpointAddress')
+            IOT_ENDPOINT_ATS=$(aws iot describe-endpoint --region $REGION --endpoint-type iot:Data-ATS | jq -r ''.endpointAddress'')
+            IOT_POLICY=${IoTWSIoTPolicy}
+            echo 'PATH=$PATH:/usr/local/bin' >> /home/ec2-user/.bashrc
+            echo 'export PATH' >> /home/ec2-user/.bashrc
+            echo "export IOT_ENDPOINT=$IOT_ENDPOINT" >> /home/ec2-user/.bashrc
+            echo "export IOT_ENDPOINT_ATS=$IOT_ENDPOINT_ATS" >> /home/ec2-user/.bashrc
+            echo "export IOT_POLICY=$IOT_POLICY" >> /home/ec2-user/.bashrc
+            echo "export AWS_REGION=$REGION" >> /home/ec2-user/.bashrc
+            echo "export ARN_LAMBDA_ROLE=$ARN_LAMBDA_ROLE" >> /home/ec2-user/.bashrc
+            echo "export ARN_IOT_PROVISIONING_ROLE=$ARN_IOT_PROVISIONING_ROLE" >> /home/ec2-user/.bashrc
+            test ! -e /home/ec2-user/.ssh && mkdir -m 700 /home/ec2-user/.ssh
+            sed -e "s/XXXS3_BUCKETXXX/$S3_BUCKET/" /home/ec2-user/job-agent/job-document-install-in.json > /home/ec2-user/job-agent/job-document-install.json
+            rm /home/ec2-user/job-agent/job-document-install-in.json
+            echo '=== CREATE SSH KEY-PAIR ==='
+            ssh-keygen -t rsa -b 2048 -f /home/ec2-user/.ssh/iotws -P ${C9Passwd}
+            cat /home/ec2-user/.ssh/iotws.pub >> /home/ec2-user/.ssh/authorized_keys
+            aws s3 cp /home/ec2-user/.ssh/iotws s3://$S3_BUCKET/ssh/iotws --region $REGION
+            echo '=== CLOUD9  ==='
+            echo '#!/bin/sh' > /tmp/install-cloud9.sh
+            echo 'cd /home/ec2-user' >> /tmp/install-cloud9.sh
+            echo 'wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash' >> /tmp/install-cloud9.sh
+            echo 'export NVM_DIR="$HOME/.nvm"' >> /tmp/install-cloud9.sh
+            echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> /tmp/install-cloud9.sh
+            echo 'wget -O - https://raw.githubusercontent.com/c9/install/master/install.sh | bash' >> /tmp/install-cloud9.sh
+            echo 'git clone https://github.com/c9/core.git c9sdk' >> /tmp/install-cloud9.sh
+            echo 'cd c9sdk' >> /tmp/install-cloud9.sh
+            echo 'scripts/install-sdk.sh' >> /tmp/install-cloud9.sh
+            chmod +x /tmp/install-cloud9.sh
+            sudo -u ec2-user /tmp/install-cloud9.sh
+            echo '=== CONFIGURE nginx ==='
+            mv /home/ec2-user/nginx.conf.ssl /tmp/
+            test -e /etc/nginx/nginx.conf && mv /etc/nginx/nginx.conf /etc/nginx/nginx.conf.DIST
+            PUBLIC_HOSTNAME=$(curl http://169.254.169.254/latest/meta-data/public-hostname)
+            SUBJECT="/C=US/O=AWS/OU=Mfg Workshops/CN=$PUBLIC_HOSTNAME"
+            openssl req -newkey rsa:2048 -nodes -keyout /etc/nginx/server.key -x509 -days 365 -out /etc/nginx/server.crt -subj "$SUBJECT"
+            sed -e "s/PUBLIC_HOSTNAME/$PUBLIC_HOSTNAME/" /tmp/nginx.conf.ssl > /etc/nginx/nginx.conf
+            chkconfig nginx on
+            # iptables -t nat -A PREROUTING  -i eth0 -p tcp --dport 80 -j REDIRECT --to-ports 8080
+            # service iptables save
+            # iptables -n -L -t nat
+            echo '=== START CLOUD9 ==='
+            C9_USER=${C9User}
+            C9_PASSWD=${C9Passwd}
+            mv /home/ec2-user/cloud9 /etc/init.d/
+            chown root:root /etc/init.d/cloud9
+            chkconfig --add cloud9
+            chkconfig --list cloud9
+            echo "C9_USER=$C9_USER" > /etc/default/cloud9
+            echo "C9_PASSWD=$C9_PASSWD" >> /etc/default/cloud9
+            chmod 400 /etc/default/cloud9
+            sleep 5
+            service cloud9 start
+            sleep 5
+            echo '=== START nginx ==='
+            service nginx start
+            sleep 5
+            chown -R ec2-user:ec2-user /home/ec2-user/
+            rm -rf /tmp/*
+            /opt/aws/bin/cfn-signal --success true --stack ${AWS::StackName} --resource IoTWSEC2Instance --region ${AWS::Region}
+            date
+            exit 0
+          # -
+          #   S3_BUCKET: IoTWSS3Bucket
+
+  IoTWSEC2Policy:
+    Type: AWS::IAM::Policy
+    Properties:
+      #PolicyName: !Join ["", ["IoTWSEC2Policy-", !Ref 'AWS::Region']]
+      PolicyName: IoTWSSEC2Policy-us-east-1
+      PolicyDocument:
+        Statement:
+          -
+            Action:
+              - iot:*
+              - greengrass:*
+              - s3:*
+              - iam:PassRole
+              - lambda:CreateFunction
+              - lambda:GetFunction
+              - lambda:ListFunctions
+              - lambda:DeleteFunction
+              - lambda:AddPermission
+              - lambda:GetPolicy
+              - logs:FilterLogEvents
+              - dynamodb:PutItem
+              - dynamodb:GetItem
+              - dynamodb:Scan
+            Effect: Allow
+            Resource: '*'
+      Roles:
+        - !Ref IoTWSEC2Role
+
+  IoTWSEC2Role:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: 'sts:AssumeRole'
+          Effect: Allow
+          Principal:
+            Service: ec2.amazonaws.com
+      Path: /
+    Type: AWS::IAM::Role
+
+  IoTWSInstanceProfile:
+    Properties:
+      Path: /
+      Roles:
+        - !Ref IoTWSEC2Role
+    Type: AWS::IAM::InstanceProfile
+
+  IoTWSIoTPolicy:
+    Properties:
+      PolicyDocument:
+        Statement:
+        - Action: iot:*
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+    Type: AWS::IoT::Policy
+
+  IoTWSIoTServiceRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: 'sts:AssumeRole'
+          Effect: Allow
+          Principal:
+            Service: iot.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSIoTThingsRegistration
+        - arn:aws:iam::aws:policy/service-role/AWSIoTLogging
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+      Path: /
+    Type: AWS::IAM::Role
+
+  IoTWSRegLambdaJITRRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          -
+            Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      Path: /
+      Policies:
+        -
+          PolicyName: !Join ["", ["IoTWSRegLambdaJITRPolicy-", !Ref 'AWS::Region']]
+          # PolicyName: IoTWSRegLambdaJITRPolicy-us-east-1
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Effect: Allow
+                Resource: arn:aws:logs:*:*:*
+              -
+                Action:
+                  - iot:CreateThing
+                  - iot:UpdateCertificate
+                  - iot:CreatePolicy
+                  - iot:AttachPolicy
+                  - iot:DescribeCertificate
+                  - iot:AttachThingPrincipal
+                Effect: Allow
+                Resource: '*'
+
+  IoTWSS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join ["-", [!Ref 'AWS::StackName', !Ref 'AWS::Region', !Ref 'AWS::AccountId']]
+
+  IoTWSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable access for GG EC2
+      SecurityGroupIngress:
+        -
+          CidrIp: 0.0.0.0/0
+          FromPort: '22'
+          IpProtocol: tcp
+          ToPort: '22'
+        -
+          CidrIp: 0.0.0.0/0
+          FromPort: '80'
+          IpProtocol: tcp
+          ToPort: '80'
+        -
+          CidrIp: 0.0.0.0/0
+          FromPort: '443'
+          IpProtocol: tcp
+          ToPort: '443'
+        -
+          CidrIp: 0.0.0.0/0
+          FromPort: '8883'
+          IpProtocol: tcp
+          ToPort: '8883'
+        -
+          CidrIp: 0.0.0.0/0
+          FromPort: '1880'
+          IpProtocol: tcp
+          ToPort: '1880'
+      Tags:
+        -
+          Key: Name
+          Value: GG Security Group
+      VpcId: !Ref VPC
+
+  PubSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Join ["", [ !Ref 'AWS::Region', "a"]]
+      CidrBlock: 192.168.128.0/25
+      MapPublicIpOnLaunch: 'true'
+      Tags:
+        -
+          Key: CFN Stack
+          Value: !Ref 'AWS::StackName'
+        -
+          Key: Name
+          Value: Public Subnet GG 192.168.128.0/25
+      VpcId: !Ref VPC
+
+  PubSubnetRTAssoc:
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PubSubnet
+    Type: AWS::EC2::SubnetRouteTableAssociation
+
+  PublicRoute:
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+      RouteTableId: !Ref PublicRouteTable
+    Type: AWS::EC2::Route
+
+  PublicRouteTable:
+    DependsOn: GatewayToInternet
+    Properties:
+      Tags:
+        -
+          Key: CFN Stack
+          Value: !Ref AWS::StackName
+        -
+          Key: Name
+          Value: PublicRouteTable
+      VpcId: !Ref VPC
+    Type: AWS::EC2::RouteTable
+
+  VPC:
+    Properties:
+      CidrBlock: 192.168.128.0/24
+      EnableDnsHostnames: 'true'
+      EnableDnsSupport: 'true'
+      Tags:
+        -
+          Key: CFN Stack
+          Value: !Ref AWS::StackName
+        -
+          Key: Name
+          Value: VPC 192.168.128.0/24
+    Type: AWS::EC2::VPC
+
+  # WindowsPLCEIP:
+  #  Type: AWS::EC2::EIP
+  #  Properties:
+  #    InstanceId: !Ref WindowsPLC
+  #
+  # WindowsPLC:
+  #    Type: AWS::EC2::Instance
+  #    Properties:
+  #      InstanceType: t2.xlarge
+  #      ImageId: !FindInMap
+  #        - AWSRegion2WAMI
+  #        - !Ref 'AWS::Region'
+  #        - Windows2016base
+  #      SecurityGroupIds:
+  #        - !Ref PLCSecurityGroup
+  #      KeyName: !Ref EC2KeyPairName
+  #      SubnetId: !Ref PubSubnet
+  #      Tags:
+  #        -
+  #          Key: Name
+  #          Value: PLC Windows host
+  #      UserData:
+  #        !Base64 |
+  #          <powershell>
+  #          Set-Location "C:\Windows\system32"
+  #          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+  #          $temp = "c:\temp\"
+  #          $Installer = "chrome_installer.exe"
+  #          Invoke-WebRequest "http://dl.google.com/chrome/install/375.126/chrome_installer.exe" -OutFile $Path\$Installer
+  #          Start-Process -FilePath $Path\$Installer -ArgumentList "/silent /install" -Verb RunAs -Wait
+  #          Remove-Item $Path\$Installer
+  #          $link1 = "https://s3.amazonaws.com/reinvent2018-mfg303/Bedrock-IDE-1.8.6772.46976.697f0bec-Setup.zip"
+  #          $file1 = "Bedrock-IDE-1.8.6772.46976.697f0bec-Setup.exe"
+  #          $link2 = "https://github.com/stevbla/reInvent_smart_factory/raw/master/src/DataStreams.project"
+  #          $file2 = "DataStreams.project"
+  #          $sleep = 30
+  #          New-Item $temp -ItemType directory
+  #          cd $temp
+  #          Invoke-WebRequest -Uri $link1 -OutFile $file1
+  #          Start-Sleep -s $sleep
+  #          Invoke-WebRequest -Uri $link2 -OutFile $file2
+  #          Start-Sleep -s $sleep
+  #          Expand-Archive -Path $file1
+  #          #Create directory for files
+  #          new-item c:\Users\Administrator\Bedrock -ItemType directory
+  #          # Move items
+  #          Move-Item c:\temp\* -Destination c:\Users\Administrator\Bedrock
+  #          </powershell>
+
+  PLCSecurityGroup:
+     Type: AWS::EC2::SecurityGroup
+     Properties:
+         VpcId: !Ref VPC
+         GroupDescription: Windows PLC SG
+         SecurityGroupIngress:
+             - IpProtocol: tcp
+               FromPort: '3389'
+               ToPort: '3389'
+               CidrIp: 0.0.0.0/0
+         Tags:
+             - Key: Name
+               Value: PLC SG
+
+Outputs:
+  ArnIoTProvRole:
+    Description: Role Arn for IoT device provisiong
+    Value: !GetAtt IoTWSIoTServiceRole.Arn
+  ArnLambdaRole:
+    Description: Role Arn for the JITR Lambda function
+    Value: !GetAtt IoTWSRegLambdaJITRRole.Arn
+  C9IdeUrl:
+    Description: URL for your Cloud9 IDE
+    Value: !Join ["", ["http://", !GetAtt IoTWSEC2Instance.PublicDnsName, "/"]]
+  EC2Dns:
+    Description: DNS Name of your instance
+    Value: !GetAtt IoTWSEC2Instance.PublicDnsName
+  GGOtaS3UrlSignerRoleArn:
+    Description: |
+      The IAM role arn for OTA which is used to presign the S3 url which
+      links to the Greengrass software update.
+    Value: !GetAtt GGOtaS3UrlSignerRole.Arn
+  IoTPolicy:
+    Description: Name of the IoT policy for JITP
+    Value: !Ref IoTWSIoTPolicy
+  S3Bucket:
+    Description: Name of the S3 Bucket for the workshop
+    Value: !Ref IoTWSS3Bucket
+  # WindowsPLCEIP:
+  #   Description: Windows PLC EIP to connect to
+  #   Value: !Ref WindowsPLCEIP
