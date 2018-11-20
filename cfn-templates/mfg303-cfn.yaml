@@ -566,9 +566,7 @@ Resources:
                ToPort: '3389'
                CidrIp: 0.0.0.0/0
              -
-               IpProtocol: all
-               FromPort: 'all'
-               ToPort: 'all'
+               IpProtocol: -1
                CidrIp: 192.168.128.0/24
          Tags:
              - Key: Name
