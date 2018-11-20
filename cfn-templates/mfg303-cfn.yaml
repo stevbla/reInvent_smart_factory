@@ -560,10 +560,16 @@ Resources:
          VpcId: !Ref VPC
          GroupDescription: Windows PLC SG
          SecurityGroupIngress:
-             - IpProtocol: tcp
+             -
+               IpProtocol: tcp
                FromPort: '3389'
                ToPort: '3389'
                CidrIp: 0.0.0.0/0
+             -
+               IpProtocol: all
+               FromPort: 'all'
+               ToPort: 'all'
+               CidrIp: 192.168.128.0/24
          Tags:
              - Key: Name
                Value: PLC SG
