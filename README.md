@@ -108,6 +108,9 @@ cd nodeRedLambda
 npm install
 zip -r nodeRedLambda.zip ./*
 ```
+
+If you have errors when running npm install, please run nvm install 6.10 and then re-run npm install.
+
 4. Setup up your awscli credentials on the Cloud9 instance.
 5. Then upload the nodeRedLambda.zip file to S3 bucket created as part of the CloudFormation template.
 
