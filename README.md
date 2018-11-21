@@ -155,11 +155,39 @@ Once Launched, take note of the Public DNS IP and using your RDP client, connect
 The Username and Password to connect to the instance is provide on screen.
 
 8. When the RDP Window launches, click Yes on the "Network Discovery" window if prompted.
+9. In Windows Security disable/turn off the Windows Firewall.
+
+Using the Windows command line or via your preferred method make a note of the Windows IP address, it should start with 192.168.128.
 
 ## Open Bedrock IDE.
+We will now configure the Bedrock PLC simulator to start sending messages.
 
-1. Once logged in disable the Windows Firwall.
-2. Double click on Bedrock IDE icon on the desktop.
+1. Right click on the Windows Task Tray Icon and right click on the PLC Icon and "Start the PLC".
+
+Make sure it is now showing a running state.
+
+2. Double click on Bedrock IDE icon on the desktop to start the simulator.
 3. Click File > Open and select the file DataStreams to load the Project.
+4. Click on the **Build** icon.
+5. Click on the **Login** icon to start the simulator sending messages.
 
 ## Configuring Node Red.
+We will now configure Node Red to communication between the PLC which is sending OPC UA messages to Greengrass which will then send the messages to the AWS Cloud via MQTT.
+
+Via your Web Browser navigate http://<EC2 External IP>:1880/red/ replace <EC2 External IP> with the External DNS name of the EC2 GG instance.
+
+Once the Node Red interface has loaded you will be presented with a page similar to below.
+
+![Node Red Default Page](images/nodered-default.png)
+
+To test we have connectivity from Node Red to the AWS Cloud. From a new browser tab or go back to your AWS Console tab if you left it open.
+
+- Go to IoT Core and Act.
+- Subscribe to #
+- From the Flow 5 tab, click on the left square next to Inject and you should see a message appear in IoT.
+
+Next we are going to configure Node Red to listen to the OPC Server.
+
+1. Create a new Flow tab in Node Red.
+![Node Red New Flow](images/nodered-newflow.png)
+2.
