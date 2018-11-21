@@ -190,4 +190,32 @@ Next we are going to configure Node Red to listen to the OPC Server.
 
 1. Create a new Flow tab in Node Red.
 ![Node Red New Flow](images/nodered-newflow.png)
-2.
+
+
+2. From the left hand menu drag on an "inject" object and copy in the Topic string as per the screenshot, clicking Done once completed.
+![Node Red New Flow](images/nodered-inject.png)
+
+3. Next drag on a opc-ua-client object, link it to the inject object. Double click it and define the endpoint using the PLC Windows server IP, click Done.
+![Node Red New Flow](images/nodered-opcua.png)
+
+4. Next drag on a function, link it to the opc-ua client object and add the code as defined in the image below.
+![Node Red New Flow](images/nodered-function.png)
+
+5. Finally drag on a publish command and link it to the function. Your flow should be similar to that of the one in the screenshot.
+![Node Red New Flow](images/nodered-Angleflow.png)
+
+Now click **Deploy** in the top right hand of the Node Red window and then click on the inject objects button.
+
+The Node Red flow will now be sending data from the PLC to AWS IoT. If you go back to your AWS Console IoT Test windows where you have subscribed to **#** you will see the messages flowing in.
+
+## Additional Tasks (Advanced)
+
+Now that you have a flow running, you can repeat the above steps to define flows for the Sine variable and for the other 2 Data Streams (1 & 2).
+
+In total you could have 6 Flows defined.
+
+Make sure when repeating the steps that you change the variables and the topic string to match.
+
+You can also now configure AWS IoT Analytics to inject the data and visualise it.
+
+Good Luck.
