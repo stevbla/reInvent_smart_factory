@@ -26,8 +26,8 @@ Parameters:
       - t2.medium
       - t2.large
     ConstraintDescription: Must be a valid EC2 instance type
-  EC2KeyPairName:
-    Type: AWS::EC2::KeyPair::KeyName
+  # EC2KeyPairName:
+  #   Type: AWS::EC2::KeyPair::KeyName
 
 Mappings:
   AWSRegion2AMI:

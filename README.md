@@ -10,21 +10,23 @@ The workshop will walk you through the following steps:
 4. Configure Node Red to talk between the PLC Simulator and Greengrass
 
 ## Pre Requisites.
-To complete this workshop you will need an AWS Account with a Key Pair setup. You will also need the Microsoft RDP Client installed on your PC.
+To complete this workshop you will need an AWS Account and Microsoft RDP Client installed on your PC and a Web Browser of course :-).
 
 To ensure the workshop is successful we suggest that you use the **US-EAST-1** region for all AWS Services and tasks.
 
 
 ## Setting up the Environment.
-This section will walk you through setting up the workshop ennvironment.
+This section will walk you through setting up the workshop environment.
 
-To setup the environment for this workshop you will need to download the following [CloudFormation Template](cfntemplates/mfg303-cfn.yaml).
+To setup the environment for this workshop you will need to download the following [CloudFormation Template](cfn-templates/mfg303-cfn.yaml).
+
+This template will build a basic VPC with Security Groups and the required IAM Policies with an EC2 instance which will host Greengrass.
 
 1. Log into the AWS Console and select **CloudFormation** from the Services menu.
 2. Click **Create Stack**
 3. Choose to ***Upload a template to Amazon S3*** and click Next.
 4. Name the Stack: **mfg303**
-5. Enter a Username and Password for C9User and C9Passwd respectivily, these will be the credentials you use to log into the Cloud9 interface.
+5. Enter a Username and Password for C9User and C9Passwd respectively, these will be the credentials you use to log into the Cloud9 interface.
 6. Select the EC2 Key Pair you would like to use.
 7. The default Instance Type of t2.micro can be left as default.
 8. Click Next & Next
