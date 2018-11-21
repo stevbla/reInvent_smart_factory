@@ -10,7 +10,8 @@ The workshop will walk you through the following steps:
 4. Configure Node Red to talk between the PLC Simulator and Greengrass
 5. View the Data from the PLC in AWS IoT.
 
-> Architecture picture to be inserted with new icons.
+Below is a high level architecture of what we will be building today.
+![Architecture](images/architecture.png)
 
 ## Pre Requisites.
 To complete this workshop you will need an AWS Account and Microsoft RDP Client installed on your PC and a Web Browser of course :-).
@@ -21,7 +22,8 @@ To ensure the workshop is successful we suggest that you use the **US-EAST-1** r
 ## Setting up the Environment.
 This section will walk you through setting up the workshop environment.
 
-To setup the environment for this workshop you will need to download the following [CloudFormation Template](cfn-templates/mfg303-cfn.yaml).
+To setup the environment for this workshop you just click the following link to launch the [CloudFormation Template](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/review?templateURL=https://s3.amazonaws.com/reinvent2018-mfg303/mfg303-cfn.yaml&stackName=mfg303).
+
 
 This template will build a basic VPC with Security Groups and the required IAM Policies with an EC2 instance which will host Greengrass.
 
@@ -30,10 +32,9 @@ This template will build a basic VPC with Security Groups and the required IAM P
 3. Choose to ***Upload a template to Amazon S3*** and click Next.
 4. Name the Stack: **mfg303**
 5. Enter a Username and Password for C9User and C9Passwd respectively, these will be the credentials you use to log into the Cloud9 interface.
-6. Select the EC2 Key Pair you would like to use.
-7. The default Instance Type of t2.micro can be left as default.
-8. Click Next & Next
-9. Tick the "I acknowledge that AWS CloudFormation might create IAM resources." box and click **Create**
+6. The default Instance Type of t2.micro can be left as default.
+6. Click Next & Next
+8. Tick the "I acknowledge that AWS CloudFormation might create IAM resources." box and click **Create**
 
 The required resources will now be created for you, once completed successfully you can move onto the next step.
 
@@ -45,7 +46,7 @@ The following steps will walk you through configuring Node Red on Greengrass.
 ### Creating a Greengrass Group.
 Firstly lets setup the Greengrass Group.
 
-Make sure you are in the US-EAST-1 region.
+Make sure you are in the **US-EAST-1** region.
 
 1. From the AWS Console select the **IoT Core** service.
 
@@ -93,7 +94,7 @@ Now we will configure the Node Red Lamdba Function.
 tar -xvf nodeRedLambda.tar -C nodeRedLambda
 cd nodeRedLambda
 ```
-2. Edit package.json and add the following lines for the additional Node modules.
+2. Edit package.json file in the nodeRed Lambda directory and add the following lines for the additional Node modules.
 
 ```json
 "node-red-dashboard": "^2.11.0",
@@ -222,3 +223,7 @@ Make sure when repeating the steps that you change the variables and the topic s
 You can also now configure AWS IoT Analytics to inject the data and visualise it.
 
 Good Luck.
+
+## Final Note.
+
+Please make sure that you clear down/delete the resources created in this workshop once you are done. Make sure you delete the resources created manually before you delete the cloudformation template.
