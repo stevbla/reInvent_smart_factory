@@ -8,6 +8,9 @@ The workshop will walk you through the following steps:
 2. Deploy a Lambda Function with Node Red to act as the data concentrator.
 3. Create and Setup the PLC Simulator
 4. Configure Node Red to talk between the PLC Simulator and Greengrass
+5. View the Data from the PLC in AWS IoT.
+
+> Architecture picture to be inserted with new icons.
 
 ## Pre Requisites.
 To complete this workshop you will need an AWS Account and Microsoft RDP Client installed on your PC and a Web Browser of course :-).
@@ -174,7 +177,7 @@ Make sure it is now showing a running state.
 ## Configuring Node Red.
 We will now configure Node Red to communication between the PLC which is sending OPC UA messages to Greengrass which will then send the messages to the AWS Cloud via MQTT.
 
-Via your Web Browser navigate http://<EC2 External IP>:1880/red/ replace <EC2 External IP> with the External DNS name of the EC2 GG instance.
+Via your Web Browser navigate http://EC2 External IP:1880/red/ replace <EC2 External IP> with the External DNS name of the EC2 GG instance.
 
 Once the Node Red interface has loaded you will be presented with a page similar to below.
 
