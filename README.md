@@ -24,17 +24,14 @@ This section will walk you through setting up the workshop environment.
 
 To setup the environment for this workshop you just click the following link to launch the [CloudFormation Template](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/review?templateURL=https://s3.amazonaws.com/reinvent2018-mfg303/mfg303-cfn.yaml&stackName=mfg303).
 
+If you are not already logged into the AWS Console you will need to log into the AWS Account you wish to use for this workshop.
 
 This template will build a basic VPC with Security Groups and the required IAM Policies with an EC2 instance which will host Greengrass.
 
-1. Log into the AWS Console and select **CloudFormation** from the Services menu.
-2. Click **Create Stack**
-3. Choose to ***Upload a template to Amazon S3*** and click Next.
-4. Name the Stack: **mfg303**
-5. Enter a Username and Password for C9User and C9Passwd respectively, these will be the credentials you use to log into the Cloud9 interface.
-6. The default Instance Type of t2.micro can be left as default.
-6. Click Next & Next
-8. Tick the "I acknowledge that AWS CloudFormation might create IAM resources." box and click **Create**
+1. Enter a Username and Password for C9User and C9Passwd respectively, these will be the credentials you use to log into the Cloud9 interface.
+2. The default Instance Type of t2.micro can be left as default.
+3. Click Next & Next
+4. Tick the "I acknowledge that AWS CloudFormation might create IAM resources." box and click **Create**
 
 The required resources will now be created for you, once completed successfully you can move onto the next step.
 
