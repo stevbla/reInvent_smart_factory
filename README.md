@@ -1,74 +1,90 @@
 # MFG303 - Enable your Smart Factory with the AWS Industrial IoT Reference Solution
 
 ## Overview
-This workshop will walk you through connecting industrial devices (PLCs Data) in your simulated factory environment to the AWS Cloud.
+This workshop will walk you through connecting industrial devices (a simulated PLC) to the AWS Cloud using Node Red running as a Lambda function on AWS Greengrass.
 
 The workshop will walk you through the following steps:
-1. Setup Greengrass as a Gateway
-2. Deploy a Lambda Function with Node Red to act as the data concentrator.
-3. Create and Setup the PLC Simulator
-4. Configure Node Red to talk between the PLC Simulator and Greengrass
-5. View the Data from the PLC in AWS IoT.
+1. Setting up Greengrass as a Gateway
+2. Deploying a Lambda Function with Node Red to act as the data concentrator.
+3. Setting up the PLC Simulator
+4. Configuring Node Red to talk between the PLC Simulator and Greengrass
+5. Viewing the Data from the PLC in AWS IoT.
 
 Below is a high level architecture of what we will be building today.
 ![Architecture](images/architecture.png)
 
 ## Pre Requisites.
-To complete this workshop you will need an AWS Account and Microsoft RDP Client installed on your PC and a Web Browser of course :-).
+To complete this workshop you will need an AWS Account with Administration privileges and the Microsoft RDP Client installed on your PC and a Web Browser of course :-).
 
 To ensure the workshop is successful we suggest that you use the **US-EAST-1** region for all AWS Services and tasks.
 
-
-## Setting up the Environment.
+## Setting up the Workshop Environment.
 This section will walk you through setting up the workshop environment.
 
-To setup the environment for this workshop you just click the following link to launch the [CloudFormation Template](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/review?templateURL=https://s3.amazonaws.com/reinvent2018-mfg303/mfg303-cfn.yaml&stackName=mfg303).
+To setup the environment for this workshop you just need to click on the following link to launch the [CloudFormation Template](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/review?templateURL=https://s3.amazonaws.com/reinvent2018-mfg303/mfg303-cfn.yaml&stackName=mfg303) into your AWS Account.
 
-If you are not already logged into the AWS Console you will need to log into the AWS Account you wish to use for this workshop.
+If you are not already logged into your AWS Console you will need to log in with the AWS Account Credentials which you will want to use for this workshop.
 
-This template will build a basic VPC with Security Groups and the required IAM Policies with an EC2 instance which will host Greengrass.
+The CloudFormation template will build a basic VPC with Security Groups and the required IAM Policies with an EC2 instance which will host Greengrass on it.
 
-1. Enter a Username and Password for C9User and C9Passwd respectively, these will be the credentials you use to log into the Cloud9 interface.
+When you click the link you will be taken to the CloudFormation Services page, below are the steps you will need to complete for the Template to deploy.
+
+![CloudFormation Launch](images/cfn-launch.png)
+
+1. Enter a Username and Password for C9User and C9Passwd respectively, these will be the credentials you will use to log into the Cloud9 interface later in the workshop.
 2. The default Instance Type of t2.micro can be left as default.
 3. Click Next & Next
 4. Tick the "I acknowledge that AWS CloudFormation might create IAM resources." box and click **Create**
 
-The required resources will now be created for you, once completed successfully you can move onto the next step.
+The required resources will now be created for you, once completed successfully you can move onto the next step. It will take around 10 mins for the template to finish.
 
-> To help you in future steps of the workshop I suggest you take note (copy to a text file) of the value of **C9IdeURL** in the output of CloudFormation.
+![CloudFormation Completed](images/cfn-complete.png)
+
+Take a note of the value of **C9IdeURL** in the Output tab of CloudFormation as you will need later in the workshop.
 
 ## Configuring Greengrass
-The following steps will walk you through configuring Node Red on Greengrass.
+Next we will walk you through configuring Node Red on Greengrass.
 
 ### Creating a Greengrass Group.
-Firstly lets setup the Greengrass Group.
+Firstly lets setup the Greengrass Group within the AWS Console.
 
 Make sure you are in the **US-EAST-1** region.
 
 1. From the AWS Console select the **IoT Core** service.
 
-If you have never used IoT core before, click “Get started”.
+If you have never used IoT Core before, click “Get started”.
 
 2. On the left hand menu select **Greengrass**.
 3. Within the main window under "Define a Greengrass Group" click "Get Started".
 4. Click "Use easy creation"
-5. Name your GG Group **PLCGateways**, click Next
+5. Name your GG Group **PLCGateway**, click Next
 6. Accept the default name for the Core and Click Next.
 7. Click "Create Group and Core"
-8. Click on “Download the resources as tar.gz” and store the downloaded files anywhere on your local hard disk.
+8. Click on “Download the resources as tar.gz” and store the downloaded files anywhere on your local hard disk where you can find it later.
 
-> Typically, it is required to download the Greengrass release you want to use for the chip architecture of the device you are using. In this case, we can skip this step as we have already installed Greengrass on the EC2 instance via the CloudFormation template.
+> Note: normally you should download the Greengrass release you want to use for the chip architecture of the device you are using. In case of this workshop, we can skip this step as we have already installed Greengrass on the EC2 instance via the CloudFormation template.
 
-9. Click “Finish” at the bottom of the screen.
+9. Make sure you Click “Finish” at the bottom of the page.
 
 Within IAM create a new Role for Greengrass called **Greengrass_ServiceRole** which has the following policies attached AmazonS3FullAccess, CloudWatchLogsFullAccess, AWSGreengrassResourceAccessRolePolicy.
 
+![GG Role Create 1](images/gg-role.png)
+
+![GG Role Create 2](images/gg-role2.png)
+
 ### Configuring the Greengrass Device.
+Next we will need configure Greengrass on your EC2 instance.
 
 1. From your Web Browser open a new tab or Window and browse to the Cloud9 URL which is referenced in the Outputs from the CloudFormation template **C9IdeUrl**.
-2. Depending on your Web Browser accept/acknowledge the security warning around the website.
-3. When you get the credential dialog box, enter the Username and Password you used when deploying the CloudFormation template.
+2. Depending on your Web Browser accept/acknowledge the security warnings to allow you to browse the website.
+3. When you get prompted with the credential dialog box, enter the Username and Password you used when deploying the CloudFormation template.
+
+![Cloud9](images/cloud9.png)
+
 4. From the Cloud9 IDE, click **File** > **Upload Local Files...** and select the tar.gz file that you downloaded from the Greengrass setup step.
+
+This will put the file into the home directory of the ec2-user, you should be able to see it within the file browser in the left hand windows of the Cloud9 interface.
+
 5. From the Cloud9 IDE terminal window (bottom of the page), run the below command to extract the files.
 
 ```bash
@@ -79,11 +95,12 @@ sudo tar -xzvf ~/*-setup.tar.gz -C /greengrass
 ```bash
 sudo /greengrass/ggc/core/greengrassd start
 ```
+Greengrass is now running and you should see output simular to that shown in the below screenshot.
 
-Greengrass is now running
+![GG Started](images/cloud9-gg-start.png)
 
 ### Create a new Lambda Function.
-Now we will configure the Node Red Lamdba Function.
+Now we will configure the Node Red Lamdba Function which we will deploy onto Greengrass.
 
 1. From the Cloud9 Terminal run the following commend to extract the code.
 
@@ -91,7 +108,12 @@ Now we will configure the Node Red Lamdba Function.
 tar -xvf nodeRedLambda.tar -C nodeRedLambda
 cd nodeRedLambda
 ```
-2. Edit package.json file in the nodeRed Lambda directory and add the following lines for the additional Node modules.
+You shoudl now have 2 files and a directory in the nodeRedLambda directory.
+![Node Red Lambda 1](images/nr-lambda1.png)
+
+Next we will edit the packages.json file to add the additional Node Red modules we require. If in the future you would like to use other Industry Protocols, this is where you would add them to build it into the Node Red Lamdba function.
+
+2. Edit package.json file in the nodeRed Lambda directory and add the following lines for the additional Node modules. You can do this via the Cloud9 interface, just double click the packages.json file on the left hand window and it will open up in the top main window.
 
 ```json
 "node-red-dashboard": "^2.11.0",
@@ -99,46 +121,92 @@ cd nodeRedLambda
 "node-red-contrib-opcua": "^0.2.32",
 "node-opcua": "^0.5.1"
 ```
-3. Once added and saved, run the below commands to build the function.
+Make sure you add a **,** to the end of the request line after adding in the above lines.
+
+![NR Packages](images/nr-packages.png)
+
+3. Once added and saved, run the below commands from the nodeRedLambda directory to build the function.
 
 ```bash
+nvm install 6.10
 npm install
-zip -r nodeRedLambda.zip ./*
+```
+If the build was successful you should see an output simular to the below.
+
+```bash
+> lambdanodered@1.0.0 postinstall /home/ec2-user/nodeRedLambda
+> cp libs/publish.js libs/publish.html node_modules/node-red/nodes/; cp -R libs/aws-greengrass-core-sdk node_modules/
+
+npm WARN enoent ENOENT: no such file or directory, open '/home/ec2-user/nodeRedLambda/node_modules/aws-greengrass-core-sdk/package.json'
+npm WARN lambdanodered@1.0.0 No description
+npm WARN lambdanodered@1.0.0 No repository field.
 ```
 
-If you have errors when running npm install, please run nvm install 6.10 and then re-run npm install.
+Once successful zip the files up using the below command.
 
-4. Setup up your awscli credentials on the Cloud9 instance.
+```bash
+zip -r ../nodeRedLambda.zip ./*
+cd
+```
+![Node Red Lambda 2](images/nr-lambda2.png)
+
+4. Setup up your awscli credentials on the Cloud9 instance using the aws configure command.
+```bash
+$ aws configure
+```
 5. Then upload the nodeRedLambda.zip file to S3 bucket created as part of the CloudFormation template.
 
-> HINT: aws s3 cp nodeRedLamdba.zip s3://....
+> HINT: aws s3 cp nodeRedLambda.zip s3://mfg303-us-east-1-ACCOUNTID/
 
-6. From the AWS Console create a new Lambda function from scratch called **nodeRedFunction** with a Node.js 6.10 runtime. Choose "Create a new role from one or more templates" with a role name of nodeRedRole.
-7. In the Lambda function window under **Function Code** choose to Upload the Function via a S3 and provide the S3 URL from step 5.
-8. From the action menu select "Publish new version", type First version and then choose Publish. Select Create alias with a name of **GG_nodeRedFunction** with a version of 1.
-9. From the IoT Services menu select the PLCGateways group under the Greengrass > Groups menu. Then select Add Lambda from the Lambdas menu.
-10. Choose "Use existing Lambda" and select nodeRed and then select the Alias you created followed by Finished.
+6. From the AWS Console create a new Lambda function from scratch called **nodeRedFunction** with a Node.js 6.10 runtime. Choose "Create a new role from one or more templates" with a role name of nodeRedRole. Click "Create function" to create the function.
+
+> If this is the first time you have created a Lambda function, just click on "Create a function".
+
+![Create Lambda](images/lambdacreate.png)
+
+7. In the Lambda function window under **Function Code** choose to Upload the Function via a S3 and provide the S3 URL from step 5. Make sure you click "Save" to upload the zip file.
+
+![Lambda S3](images/lambdas3.png)
+
+8. From the action menu select "Publish new version", type "First Version" and then choose Publish. Select Create alias with a name of **GG_nodeRedFunction** with a version of 1.
+![Lambda3](images/lambda4.png)
+
+9. From the IoT Services menu select the PLCGateway group under the Greengrass > Groups menu. Then select Add Lambda/Add your first Lambda from the Lambdas menu.
+10. Choose "Use existing Lambda" and select nodeRedFunction and then select the Alias you created followed by Finished.
+
+![Lambda5](images/lambda5.png)
+
 11. Once created click on **...** on the Lambda function and select Edit configuration.
-12. Set the Memory limit to 250M and for the Lambda Lifecycle choose long-lived.
-
-> Make sure you click update.
+12. Set the Memory limit to 250M and for the Lambda Lifecycle choose long-lived. Make sure you click Update at the bottom of the page.
+![Lambda6](images/lambda6.png)
 
 13. Go back to the Greengrass group menu and choose Subscriptions. Click Add Subscription, setting the Source as the nodeRed Lambda function and the Target as the IoT Cloud.
 14. Click next and set **#** as the Topic Filter. Once done click Finish.
-15. From the Resources side menu, click "Add a Local Resource". Name the resource nodeRed with type volume. Source path and Destination path = /nodered. Set Automatically add OS group permissions of the Linux group that owns the resource, select the nodeRed Lambda function with Read and Write and then click Save.
-16. Create a new ML resource select the uploaded file from S3 (use the bucket from the cfn template) with a local path: /flows, upload the [myflow.json.zip](src/myflow.json.zip) to the bucket.
+![Lambda7](images/lambda7.png)
+
+15. From the Resources side menu, click "Add a Local Resource". Name the resource nodeRed with type volume. Source path and Destination path = /nodered. Set Automatically add OS group permissions of the Linux group that owns the resource, select the nodeRedFunction Lambda function with Read and Write and then click Save.
+![Lambda8](images/lambda8.png)
+
+16. Upload the [myflow.json.zip](src/myflow.json.zip) to the S3 bucket created by CloudFormation template. Then create a new ML resource select the uploaded file from S3 (use the bucket from the cfn template) with a local path: /flows and select the nodeRedLambda function with "Read and write access" permissions.
+![Lambda9](images/lambda9.png)
+
 17. Click the Settings menu and click on Add Role for Group Role and select the Greengrass_ServiceRole followed by Save.
 18. Finally under the Action menu for the Group, click Deploy using Automatic Detection and Grant Permissions.
 
-> If the account previously has not been used with AWS Greengrass, the deployment can potentially fail because AWS Greengrass cannot assume the service role required to execute the deployment.
+If the account previously has not been used with AWS Greengrass, the deployment can potentially fail because AWS Greengrass cannot assume the service role required to execute the deployment.
 
-Via the Cloud9 terminal and ensuring your awscli credentials are configured, run the below commands.
+To fix this via the Cloud9 terminal and ensuring your awscli credentials are configured, run the below commands.
 
 ```bash
 gg_service_arn=$(aws iam get-role --role-name Greengrass_ServiceRole --query Role.Arn)
-[ec2-user@ip-192-168-128-85 ~]$ aws greengrass associate-service-role-to-account --role-arn ${gg_service_arn//\"/}
+aws greengrass associate-service-role-to-account --role-arn ${gg_service_arn//\"/}
 ```
-Once associated re-run the Deploy.
+Once associated re-run the Deploy action.
+
+Once the Lambda Function has successfully deployed you will see a message as per below.
+
+![Lambda10](images/lambda10.png)
+
 
 ## Setting up the PLC Simulator.
 The following section will walk you through setting up the PLC Simulator host.

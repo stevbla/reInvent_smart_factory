@@ -218,7 +218,7 @@ Resources:
             chown ggc_user:ggc_group /nodered /flows
             cp /usr/local/bin/node /usr/local/bin/nodejs6.10
             mkdir /home/ec2-user/nodeRedLambda
-            wget -O /home/ec2-user/nodeRedLambda/nodeRedLambda.tar  https://github.com/stevbla/reInvent_smart_factory/raw/master/src/nodeRedLambda.tar
+            wget -O /home/ec2-user/nodeRedLambda.tar  https://github.com/stevbla/reInvent_smart_factory/raw/master/src/nodeRedLambda.tar
             wget -O /home/ec2-user/myflow.json.zip https://github.com/stevbla/reInvent_smart_factory/raw/master/src/myflow.json.zip
             echo '=== PREPARE DEVICE DEFENDER ==='
             test -e /home/ec2-user/device-defender && cd /home/ec2-user/device-defender &&
