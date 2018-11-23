@@ -309,7 +309,7 @@ The Node Red flow will now be sending data from the PLC to AWS IoT. If you go ba
 6. If you want to create different topic for each Data Stream then double click on the **publish** item and define a topic for example plc/ds0.
 ![Node Red topic](images/nrtopic.png)
 
-7. Now Deploy the flow and click on inject. You will now see in the AWS IoT that the data is coming across on a topic.
+7. Now Deploy the flow and click on inject. You will now see in AWS IoT that the data is coming across on a topic.
 ![Node Red topic iot](images/nrtopiciot.png)
 
 
@@ -320,7 +320,7 @@ Now that you have a flow running, you can repeat the above steps to define flows
 In total you should have 6 Flows defined as shown below, publishing to 3 topics (plc/ds0, plc/ds1 & plc/ds2).
 ![6 Streams](images/6streams.png)
 
-Make sure when repeating the steps that you change the variables and the topic string to match.
+Make sure when repeating the steps that you change the variables and the topic string to match. You will also need to inject each flow for it to start sending data.
 
 ## Additional Tasks (Advanced)
 
