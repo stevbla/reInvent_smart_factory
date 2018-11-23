@@ -209,42 +209,56 @@ Once the Lambda Function has successfully deployed you will see a message as per
 
 
 ## Setting up the PLC Simulator.
-The following section will walk you through setting up the PLC Simulator host.
+Now we will create and setup the PLC Simulator.
 
 1. From the AWS Console go to EC2.
-2. Click on "Launch Instance" and search for the following AMI within the community.
+2. Click on "Launch Instance" / "Launch a Virtual Machine" and search for the following AMI within the community.
 
 MFG303 Bedrock Automation - ami-07a329552c30a599f
 
-3. Click Next and Select t2.xlarge as the instance type followed by "Configure Instance Details"
+3. Click Next and Select **t2.xlarge** as the instance type followed by "Configure Instance Details"
 4. Select the VPC and Subnet for the instance which was created as part of the CloudFormation template and where the GG EC2 instance is residing.
+> Hint: The VPC will be called "VPC 192.168.128.0/24"
+
 5. Click Next on the Storage and add a Name Tag called "PLC Windows."
 6. On the Security Group, select the security group which has a description of "Windows PLC SG"
 7. Click Review and Launch and then Launch.
+> You can either select a key pair you already have in your account or proceed without.
 
-Once Launched, take note of the Public DNS IP and using your RDP client, connect to it.
+It will take a couple of minutes for the instances to launch.
+
+Once Launched, take note of the Public DNS and using your RDP client on your laptop, connect to it.
 
 The Username and Password to connect to the instance is provide on screen.
 
 8. When the RDP Window launches, click Yes on the "Network Discovery" window if prompted.
 9. In Windows Security disable/turn off the Windows Firewall.
 
-Using the Windows command line or via your preferred method make a note of the Windows IP address, it should start with 192.168.128.
+Using the Windows command line, AWS Console or via your preferred method make a note of the Windows IP Private address, it should start with 192.168.128.
 
-## Open Bedrock IDE.
+### Open Bedrock IDE.
 We will now configure the Bedrock PLC simulator to start sending messages.
 
-1. Right click on the Windows Task Tray Icon and right click on the PLC Icon and "Start the PLC".
+1. Right click on the Windows Task Tray Icon and right click on the CODESYS Icon and "Start PLC", if it is not already running.
 
-Make sure it is now showing a running state.
+![PLC 1](images/plc1.png)
 
-2. Double click on Bedrock IDE icon on the desktop to start the simulator.
+2. Double click on "Bedrock IDE V1.8" icon on the desktop to start the simulator.
+
 3. Click File > Open and select the file DataStreams to load the Project.
-4. Click on the **Build** icon.
-5. Click on the **Login** icon to start the simulator sending messages.
+![PLC 2](images/plc2.png)
 
-## Configuring Node Red.
-We will now configure Node Red to communication between the PLC which is sending OPC UA messages to Greengrass which will then send the messages to the AWS Cloud via MQTT.
+4. Click on the **Build** icon.
+![PLC 3](images/plc3.png)
+5. Double Click on the Device tree item in the left hand window and make sure that the EC2 instance is selected in the drop down list.
+![PLC 5](images/plc5.png)
+6. Click on the **Login** icon to start the simulator sending messages.
+![PLC 4](images/plc4.png)
+
+In the bottom dialog tool bar of the Bedrock software you should now see a Green Box that says **RUN**.
+
+### Configuring Node Red.
+We will now configure Node Red to communication between the PLC which is sending OPC UA messages to Greengrass, which will then send the messages to the AWS IoT via MQTT.
 
 Via your Web Browser navigate http://EC2 External IP:1880/red/ replace <EC2 External IP> with the External DNS name of the EC2 GG instance.
 
@@ -254,41 +268,65 @@ Once the Node Red interface has loaded you will be presented with a page similar
 
 To test we have connectivity from Node Red to the AWS Cloud. From a new browser tab or go back to your AWS Console tab if you left it open.
 
-- Go to IoT Core and Act.
+- Go to IoT Core and click Test.
 - Subscribe to #
-- From the Flow 5 tab, click on the left square next to Inject and you should see a message appear in IoT.
+- From the Test Flow tab, click on the left square next to Inject and you should see a message appear in IoT.
 
-Next we are going to configure Node Red to listen to the OPC Server.
+![Node Red Test 1](images/nr1.png)
+
+![Node Red Test 2](images/nr2.png)
+
+Now we are going to configure Node Red to listen to the OPC Server.
 
 1. Create a new Flow tab in Node Red.
 ![Node Red New Flow](images/nodered-newflow.png)
 
-
-2. From the left hand menu drag on an "inject" object and copy in the Topic string as per the screenshot, clicking Done once completed.
+2. From the left hand menu drag on an "inject" object and copy in the Topic string (ns=4;s=|var|CODESYS Control Win V3.Application.GVL.Data_Streams[0].Angle) as per the screenshot, clicking Done once completed.
 ![Node Red New Flow](images/nodered-inject.png)
 
 3. Next drag on a opc-ua-client object, link it to the inject object. Double click it and define the endpoint using the PLC Windows server IP, click Done.
 ![Node Red New Flow](images/nodered-opcua.png)
 
 4. Next drag on a function, link it to the opc-ua client object and add the code as defined in the image below.
+```JSON
+msg = { payload :
+  {
+      "Name": "DSAngle0",
+      "Value": msg.payload
+  }
+};
+return msg;
+```
 ![Node Red New Flow](images/nodered-function.png)
 
 5. Finally drag on a publish command and link it to the function. Your flow should be similar to that of the one in the screenshot.
 ![Node Red New Flow](images/nodered-Angleflow.png)
 
-Now click **Deploy** in the top right hand of the Node Red window and then click on the inject objects button.
+Now click **Deploy** in the top right hand of the Node Red window and then click on the inject object button.
 
 The Node Red flow will now be sending data from the PLC to AWS IoT. If you go back to your AWS Console IoT Test windows where you have subscribed to **#** you will see the messages flowing in.
 
-## Additional Tasks (Advanced)
+6. If you want to create different topic for each Data Stream then double click on the **publish** item and define a topic for example plc/ds0.
+![Node Red topic](images/nrtopic.png)
 
-Now that you have a flow running, you can repeat the above steps to define flows for the Sine variable and for the other 2 Data Streams (1 & 2).
+7. Now Deploy the flow and click on inject. You will now see in the AWS IoT that the data is coming across on a topic.
+![Node Red topic iot](images/nrtopiciot.png)
 
-In total you could have 6 Flows defined.
+
+### Configuring the other Data Streams from the PLC
+
+Now that you have a flow running, you can repeat the above steps to define flows for the Sine (ns=4;s=|var|CODESYS Control Win V3.Application.GVL.Data_Streams[0].Sine) variable and for the other 2 Data Streams (1 & 2).
+
+In total you should have 6 Flows defined as shown below, publishing to 3 topics (plc/ds0, plc/ds1 & plc/ds2).
+![6 Streams](images/6streams.png)
 
 Make sure when repeating the steps that you change the variables and the topic string to match.
 
-You can also now configure AWS IoT Analytics to inject the data and visualise it.
+## Additional Tasks (Advanced)
+
+If you have time you can now config AWS IoT Analytics as a channel and datastore, then visualise the data in Quicksight.
+
+Additionally you could config Node Red to communicate to the PLC via Modbus.
 
 Good Luck.
 

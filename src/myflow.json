@@ -1,0 +1,570 @@
+[
+    {
+        "id": "926a0aed.ab3f58",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "84b696d8.85b868",
+        "type": "tab",
+        "label": "Flow 2",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "910b6468.02a3e8",
+        "type": "tab",
+        "label": "Flow 3",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "8fe04e99.7bb5c",
+        "type": "tab",
+        "label": "Flow 4",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "69edce4c.70597",
+        "type": "ui_tab",
+        "z": "",
+        "name": "Home",
+        "icon": "dashboard"
+    },
+    {
+        "id": "2201b5e4.38025a",
+        "type": "ui_group",
+        "z": "",
+        "name": "Default",
+        "tab": "69edce4c.70597",
+        "disp": true,
+        "width": "15",
+        "collapse": false
+    },
+    {
+        "id": "7a4488e.bfcfd78",
+        "type": "websocket-listener",
+        "z": "910b6468.02a3e8",
+        "path": "/ws/simple",
+        "wholemsg": "false"
+    },
+    {
+        "id": "c08a8f87.50078",
+        "type": "ui_base",
+        "theme": {
+            "name": "theme-light",
+            "lightTheme": {
+                "default": "#0094CE",
+                "baseColor": "#0094CE",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif",
+                "edited": true,
+                "reset": false
+            },
+            "darkTheme": {
+                "default": "#097479",
+                "baseColor": "#097479",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif",
+                "edited": false
+            },
+            "customTheme": {
+                "name": "Untitled Theme 1",
+                "default": "#4B7930",
+                "baseColor": "#4B7930",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif"
+            },
+            "themeState": {
+                "base-color": {
+                    "default": "#0094CE",
+                    "value": "#0094CE",
+                    "edited": false
+                },
+                "page-titlebar-backgroundColor": {
+                    "value": "#0094CE",
+                    "edited": false
+                },
+                "page-backgroundColor": {
+                    "value": "#fafafa",
+                    "edited": false
+                },
+                "page-sidebar-backgroundColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "group-textColor": {
+                    "value": "#1bbfff",
+                    "edited": false
+                },
+                "group-borderColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "group-backgroundColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "widget-textColor": {
+                    "value": "#111111",
+                    "edited": false
+                },
+                "widget-backgroundColor": {
+                    "value": "#0094ce",
+                    "edited": false
+                },
+                "widget-borderColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "base-font": {
+                    "value": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif"
+                }
+            },
+            "angularTheme": {
+                "primary": "indigo",
+                "accents": "blue",
+                "warn": "red",
+                "background": "grey"
+            }
+        },
+        "site": {
+            "name": "Node-RED Dashboard",
+            "hideToolbar": "false",
+            "allowSwipe": "false",
+            "allowTempTheme": "true",
+            "dateFormat": "DD/MM/YYYY",
+            "sizes": {
+                "sx": 48,
+                "sy": 48,
+                "gx": 6,
+                "gy": 6,
+                "cx": 6,
+                "cy": 6,
+                "px": 0,
+                "py": 0
+            }
+        }
+    },
+    {
+        "id": "173f15f8.c98e36",
+        "type": "OpcUa-Endpoint",
+        "z": "",
+        "endpoint": "opc.tcp://192.168.128.89:4840",
+        "secpol": "None",
+        "secmode": "NONE",
+        "login": false
+    },
+    {
+        "id": "515f3dd6.ff7884",
+        "type": "publish",
+        "z": "926a0aed.ab3f58",
+        "topic": "testtopic",
+        "x": 480,
+        "y": 200,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "1cd0a5dc.6c4d5a",
+        "type": "inject",
+        "z": "926a0aed.ab3f58",
+        "name": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 160,
+        "y": 200,
+        "wires": [
+            [
+                "515f3dd6.ff7884"
+            ]
+        ]
+    },
+    {
+        "id": "4ddd8769.8694f8",
+        "type": "http request",
+        "z": "926a0aed.ab3f58",
+        "name": "OpenWeatherMap",
+        "method": "GET",
+        "ret": "txt",
+        "url": "http://api.openweathermap.org/data/2.5/weather?q=London,uk&appid=API_KEY",
+        "tls": "",
+        "x": 410,
+        "y": 340,
+        "wires": [
+            [
+                "9091379b.15e478",
+                "d0cbb353.9b559"
+            ]
+        ]
+    },
+    {
+        "id": "13dd6bf0.ebe244",
+        "type": "inject",
+        "z": "926a0aed.ab3f58",
+        "name": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 160,
+        "y": 340,
+        "wires": [
+            [
+                "4ddd8769.8694f8"
+            ]
+        ]
+    },
+    {
+        "id": "9091379b.15e478",
+        "type": "debug",
+        "z": "926a0aed.ab3f58",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 730,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "d0cbb353.9b559",
+        "type": "publish",
+        "z": "926a0aed.ab3f58",
+        "topic": "weather",
+        "x": 720,
+        "y": 340,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "989f4dd3.3bfca",
+        "type": "inject",
+        "z": "910b6468.02a3e8",
+        "name": "Tick every 5 secs",
+        "topic": "test",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "5",
+        "crontab": "",
+        "once": false,
+        "x": 170,
+        "y": 260,
+        "wires": [
+            [
+                "2476a5c4.a3892a"
+            ]
+        ]
+    },
+    {
+        "id": "4f0f1678.0cd218",
+        "type": "websocket out",
+        "z": "910b6468.02a3e8",
+        "name": "",
+        "server": "7a4488e.bfcfd78",
+        "client": "",
+        "x": 690,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "238a3b2b.0967c4",
+        "type": "http response",
+        "z": "910b6468.02a3e8",
+        "name": "",
+        "x": 670,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "fd7da230.d9bc9",
+        "type": "http in",
+        "z": "910b6468.02a3e8",
+        "name": "",
+        "url": "/simple",
+        "method": "get",
+        "swaggerDoc": "",
+        "x": 140,
+        "y": 160,
+        "wires": [
+            [
+                "fd9197bc.590b18"
+            ]
+        ]
+    },
+    {
+        "id": "fd9197bc.590b18",
+        "type": "template",
+        "z": "910b6468.02a3e8",
+        "name": "Simple Web Page",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "html",
+        "syntax": "mustache",
+        "template": "<!DOCTYPE HTML>\n<html>\n    <head>\n    <title>Simple Live Time Display</title>\n    <script type=\"text/javascript\">\n        var ws;\n        var wsUri = \"ws:\";\n        var loc = window.location;\n        console.log(loc);\n        if (loc.protocol === \"https:\") { wsUri = \"wss:\"; }\n        // This needs to point to the web socket in the Node-RED flow\n        // ... in this case it's ws/simple\n        wsUri += \"//\" + loc.host + loc.pathname.replace(\"simple\",\"ws/simple\");\n\n        function wsConnect() {\n            console.log(\"connect\",wsUri);\n            ws = new WebSocket(wsUri);\n            //var line = \"\";    // either uncomment this for a building list of messages\n            ws.onmessage = function(msg) {\n                var line = \"\";  // or uncomment this to overwrite the existing message\n                // parse the incoming message as a JSON object\n                var data = msg.data;\n                //console.log(data);\n                // build the output from the topic and payload parts of the object\n                line += \"<p>\"+data+\"</p>\";\n                // replace the messages div with the new \"line\"\n                document.getElementById('messages').innerHTML = line;\n                //ws.send(JSON.stringify({data:data}));\n            }\n            ws.onopen = function() {\n                // update the status div with the connection status\n                document.getElementById('status').innerHTML = \"connected\";\n                //ws.send(\"Open for data\");\n                console.log(\"connected\");\n            }\n            ws.onclose = function() {\n                // update the status div with the connection status\n                document.getElementById('status').innerHTML = \"not connected\";\n                // in case of lost connection tries to reconnect every 3 secs\n                setTimeout(wsConnect,3000);\n            }\n        }\n        \n        function doit(m) {\n            if (ws) { ws.send(m); }\n        }\n    </script>\n    </head>\n    <body onload=\"wsConnect();\" onunload=\"ws.disconnect();\">\n        <font face=\"Arial\">\n        <h1>Simple Live Display</h1>\n        <div id=\"messages\"></div>\n        <button type=\"button\" onclick='doit(\"click\");'>Click to send message</button>\n        <hr/>\n        <div id=\"status\">unknown</div>\n        </font>\n    </body>\n</html>\n",
+        "x": 430,
+        "y": 160,
+        "wires": [
+            [
+                "238a3b2b.0967c4"
+            ]
+        ]
+    },
+    {
+        "id": "2476a5c4.a3892a",
+        "type": "function",
+        "z": "910b6468.02a3e8",
+        "name": "format time nicely",
+        "func": "var today = new Date();\nvar time = today.getHours() + \":\" + today.getMinutes() + \":\" + today.getSeconds();\nmsg.payload = \" Time is \" + time;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 430,
+        "y": 260,
+        "wires": [
+            [
+                "4f0f1678.0cd218"
+            ]
+        ]
+    },
+    {
+        "id": "8a521c2.4a264e",
+        "type": "websocket in",
+        "z": "910b6468.02a3e8",
+        "name": "",
+        "server": "7a4488e.bfcfd78",
+        "client": "",
+        "x": 150,
+        "y": 360,
+        "wires": [
+            [
+                "41f9fe7d.5122a"
+            ]
+        ]
+    },
+    {
+        "id": "835cdf5c.6c445",
+        "type": "publish",
+        "z": "910b6468.02a3e8",
+        "topic": "user",
+        "x": 640,
+        "y": 360,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "41f9fe7d.5122a",
+        "type": "function",
+        "z": "910b6468.02a3e8",
+        "name": "format message",
+        "func": "msg.payload = { \"event\": \"click\", \"time\": Date()}\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 400,
+        "y": 360,
+        "wires": [
+            [
+                "835cdf5c.6c445"
+            ]
+        ]
+    },
+    {
+        "id": "ca9502e.ca211",
+        "type": "http in",
+        "z": "84b696d8.85b868",
+        "name": "",
+        "url": "/hello",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 110,
+        "y": 240,
+        "wires": [
+            [
+                "fa19b639.e12e88"
+            ]
+        ]
+    },
+    {
+        "id": "fa19b639.e12e88",
+        "type": "template",
+        "z": "84b696d8.85b868",
+        "name": "page",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "<html>\n    <head></head>\n    <body>\n        <h1>Hello World!</h1>\n        <div>User agent: {{req.headers.user-agent}}</div>\n    </body>\n</html>",
+        "x": 350,
+        "y": 240,
+        "wires": [
+            [
+                "c9cd4c4b.e7515"
+            ]
+        ]
+    },
+    {
+        "id": "c9cd4c4b.e7515",
+        "type": "http response",
+        "z": "84b696d8.85b868",
+        "name": "",
+        "x": 550,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "8cc1fb89.392178",
+        "type": "http response",
+        "z": "84b696d8.85b868",
+        "name": "",
+        "x": 550,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "107d8f73.a97381",
+        "type": "template",
+        "z": "84b696d8.85b868",
+        "name": "page",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "<html>\n    <head></head>\n    <body>\n        <h1>Hello {{req.params.name}}!</h1>\n    </body>\n</html>",
+        "x": 350,
+        "y": 440,
+        "wires": [
+            [
+                "8cc1fb89.392178"
+            ]
+        ]
+    },
+    {
+        "id": "947bee8.fdca81",
+        "type": "http in",
+        "z": "84b696d8.85b868",
+        "name": "",
+        "url": "/hello/:name",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 140,
+        "y": 440,
+        "wires": [
+            [
+                "107d8f73.a97381"
+            ]
+        ]
+    },
+    {
+        "id": "9863c6ab.ac1c88",
+        "type": "comment",
+        "z": "926a0aed.ab3f58",
+        "name": "Set your OpenWeatherMap API key",
+        "info": "",
+        "x": 460,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "dbad4319.21fbd",
+        "type": "exec",
+        "z": "8fe04e99.7bb5c",
+        "command": "/bin/ps -axu",
+        "addpay": true,
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "oldrc": false,
+        "name": "",
+        "x": 350,
+        "y": 200,
+        "wires": [
+            [
+                "b2e9d93e.c14168",
+                "ac9ccc2e.b785f"
+            ],
+            [
+                "b2e9d93e.c14168"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "ef4b9e9f.b5c6",
+        "type": "inject",
+        "z": "8fe04e99.7bb5c",
+        "name": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "str",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 110,
+        "y": 200,
+        "wires": [
+            [
+                "dbad4319.21fbd"
+            ]
+        ]
+    },
+    {
+        "id": "b2e9d93e.c14168",
+        "type": "debug",
+        "z": "8fe04e99.7bb5c",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 690,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "ac9ccc2e.b785f",
+        "type": "publish",
+        "z": "8fe04e99.7bb5c",
+        "topic": "processes",
+        "x": 680,
+        "y": 200,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "58d68193.e1d81",
+        "type": "comment",
+        "z": "84b696d8.85b868",
+        "name": "visit http://IP:1880/api/hello/YourName",
+        "info": "",
+        "x": 190,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "83b76d64.8d83e",
+        "type": "comment",
+        "z": "84b696d8.85b868",
+        "name": "visit http://IP:1880/api/hello",
+        "info": "",
+        "x": 160,
+        "y": 200,
+        "wires": []
+    }
+]
