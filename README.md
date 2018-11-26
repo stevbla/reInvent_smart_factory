@@ -260,7 +260,9 @@ In the bottom dialog tool bar of the Bedrock software you should now see a Green
 ### Configuring Node Red.
 We will now configure Node Red to communication between the PLC which is sending OPC UA messages to Greengrass, which will then send the messages to the AWS IoT via MQTT.
 
-Via your Web Browser navigate http://EC2 External IP:1880/red/ replace <EC2 External IP> with the External DNS name of the EC2 GG instance.
+Via Internet Explorer 7 on the Windows PLC RDP Session browse to http://EC2 Internal IP:1880/red/ replace <EC2 Internal IP> with the Internal IP of the EC2 GG instance.
+
+(You may need to accept / acknowledge the security pop-ups from IE.)
 
 Once the Node Red interface has loaded you will be presented with a page similar to below.
 
@@ -322,14 +324,37 @@ In total you should have 6 Flows defined as shown below, publishing to 3 topics 
 
 Make sure when repeating the steps that you change the variables and the topic string to match. You will also need to inject each flow for it to start sending data.
 
+### Configure S3 as the datastore for the PLC Messages
+
+1. Firstly from the AWS Console create a new S3 bucket called plc-store with the region and your account id in the name.
+
+2. From the AWS Console select Kinesis and click "Get Started" if required.
+3. Click "Create a delivery stream" for Firehose.
+4. Name the stream **plcStore** and leave the Source as "Direct PUT", click Next.
+5. Leave "Record transformation" and "Record format conversion" as disabled and click Next.
+6. Set S3 as the destination, select the S3 bucket you just created and Click Next.
+![Kinesis 1](images/kinesis1.png)
+7. Leave all settings as default apart from changing the **Buffer Interval to 60**, Create a new IAM role.
+8. Click Next and then "Create delivery stream"
+9. Once created go to IoT Core, select Act and then Create.
+10. Name the rule "plcStore" and use the query statement "select * from 'plc/#'".
+11. Click Add Action and select "Send messages to an Amazon Kinesis Firehouse Stream"
+![IoT Action](images/iot-k.png)
+12. Click configure action and select the Stream we just created called plcStore.
+13. Create a new IAM Role, name it plcKinesisStoreRole and select it in the drop down.
+![IoT Action 2](images/iot-action-k.png)
+14. Click Add action and then Create Rule.
+
+Once created all messages sent from Greengrass on the topic **plc** will now be store in S3. The buffer has been set to 60 seconds so after a minute you will start to see files appear in the S3 bucket.
+
 ## Additional Tasks (Advanced)
 
-If you have time you can now config AWS IoT Analytics as a channel and datastore, then visualise the data in Quicksight.
+If you have time you can now config visualise the data in Quicksight using Athena.
 
 Additionally you could config Node Red to communicate to the PLC via Modbus.
 
 Good Luck.
 
-## Final Note.
+## Final Note / Clear down.
 
 Please make sure that you clear down/delete the resources created in this workshop once you are done. Make sure you delete the resources created manually before you delete the cloudformation template.
