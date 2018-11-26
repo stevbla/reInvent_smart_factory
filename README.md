@@ -328,6 +328,8 @@ Make sure when repeating the steps that you change the variables and the topic s
 
 1. Firstly from the AWS Console create a new S3 bucket called plc-store with the region and your account id in the name.
 
+e.g plc-store-us-east-1-12312312123
+
 2. From the AWS Console select Kinesis and click "Get Started" if required.
 3. Click "Create a delivery stream" for Firehose.
 4. Name the stream **plcStore** and leave the Source as "Direct PUT", click Next.
