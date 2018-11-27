@@ -286,7 +286,7 @@ Now we are going to configure Node Red to listen to the OPC Server.
 2. From the left hand menu drag on an "inject" object and copy in the Topic string (ns=4;s=|var|CODESYS Control Win V3.Application.GVL.Data_Streams[0].Angle) as per the screenshot, clicking Done once completed.
 ![Node Red New Flow](images/nodered-inject.png)
 
-3. Next drag on a opc-ua-client object, link it to the inject object. Double click it and define the endpoint using the PLC Windows server IP, click Done.
+3. Next drag on a opc-ua-client object, link it to the inject object. Double click it and define the endpoint using the PLC Windows server IP, set the Interval to "1 second", click Done.
 ![Node Red New Flow](images/nodered-opcua.png)
 
 4. Next drag on a function, link it to the opc-ua client object and add the code as defined in the image below.
